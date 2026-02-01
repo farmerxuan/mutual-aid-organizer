@@ -1,0 +1,51 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Admin</h2>
+<div class="mb-3">
+  <button class="btn btn-secondary" onclick="loadAdminList()">Refresh</button>
+  <button class="btn btn-outline-info ms-2" onclick="download('/export/anonymized')">Download anonymized CSV</button>
+  <button id="export-identifying-btn" class="btn btn-outline-dark ms-2">Download identifying CSV</button>
+  <div class="d-inline-flex ms-3">
+    <select id="admin-phone-country" class="form-select form-select-sm me-1" style="max-width:120px">
+      <option value="US">US</option>
+      <option value="CA">CA</option>
+      <option value="GB">GB</option>
+      <option value="AU">AU</option>
+      <option value="OTHER">Other</option>
+    </select>
+    <input id="admin-phone" class="form-control form-control-sm me-1" style="width:180px" placeholder="phone">
+    <button class="btn btn-outline-primary btn-sm" onclick="searchByPhone('admin')">Search</button>
+  </div>
+    <a href="/ui/export-logs" class="btn btn-outline-secondary">View export logs</a>
+  <div class="mt-3" id="adminList"></div>
+</div>
+
+<script>
+window.loadAdminList = async function(){
+  const r = await apiGet('/volunteer/list');
+  if(!r.ok) { showResultModal('Error','<p>Authentication required</p>'); return; }
+  const items = await r.json();
+  const c = document.getElementById('adminList'); c.innerHTML='';
+  items.forEach(p=>{
+    const d = document.createElement('div'); d.className='card mb-2';
+    d.innerHTML = `<div class="card-body"><b>${p.anon_id}</b> <div>Items: ${JSON.stringify(p.items)}</div><div>Status: ${p.status}</div><div class="mt-2"><button class="btn btn-sm btn-outline-primary" onclick="lookup('${p.anon_id}')">Show PII</button></div></div>`;
+    c.appendChild(d);
+  });
+}
+window.lookup = async function(anon){
+  const r = await apiPost('/volunteer/lookup',{anon_id:anon});
+  if(!r.ok){ showResultModal('Error','<p>Not allowed</p>'); return; }
+  const j = await r.json();
+  showResultModal('PII: '+anon, `<pre>${JSON.stringify(j.pii,null,2)}</pre>`);
+}
+window.download = async function(path){
+  const auth = getAuth();
+  const res = await fetch(path, {headers: {'Authorization': auth}});
+  if(!res.ok){ showResultModal('Error','<p>Failed to download</p>'); return; }
+  const t = await res.text();
+  const blob = new Blob([t], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop()+'.csv'; a.click();
+}
+</script>
+{% endblock %}

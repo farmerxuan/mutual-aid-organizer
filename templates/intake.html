@@ -1,0 +1,83 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Intake</h2>
+<form id="intakeForm" novalidate>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input class="form-control" name="name" placeholder="Full name">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <div class="input-group">
+          <select class="form-select" name="phone_country" id="phone-country" style="max-width:140px">
+            <option value="US">US (+1)</option>
+            <option value="CA">CA (+1)</option>
+            <option value="GB">GB (+44)</option>
+            <option value="AU">AU (+61)</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input class="form-control" name="phone" id="phone-input" required placeholder="e.g. 555-555-5555">
+        </div>
+        <div class="invalid-feedback">Phone is required and must match the selected country format.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Address</label>
+        <input class="form-control" name="address" placeholder="Street, city">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" name="notes" placeholder="Any delivery notes"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="scheduled">Scheduled</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Items</label>
+      <div class="mb-2">
+        <div class="card mb-2">
+          <div class="card-body">
+            <h6>Food</h6>
+            <div id="food-list" class="mb-2"></div>
+            <div class="input-group">
+              <input id="food-input" class="form-control" placeholder="e.g. bread">
+              <button class="btn btn-outline-secondary" type="button" onclick="addItem('food')">Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <h6>Non-food</h6>
+            <div id="nonfood-list" class="mb-2"></div>
+            <div class="input-group">
+              <input id="nonfood-input" class="form-control" placeholder="e.g. soap">
+              <button class="btn btn-outline-secondary" type="button" onclick="addItem('nonfood')">Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <h6>Custom</h6>
+            <div id="custom-list" class="mb-2"></div>
+            <div class="input-group">
+              <input id="custom-input" class="form-control" placeholder="e.g. cat food (1kg)">
+              <button class="btn btn-outline-secondary" type="button" onclick="addItem('custom')">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Submit</button>
+    <button class="btn btn-outline-secondary" type="button" onclick="clearItems()">Clear items</button>
+  </div>
+</form>
+
+{% endblock %}

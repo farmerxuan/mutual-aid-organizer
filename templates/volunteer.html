@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Volunteer View</h2>
+<div class="mb-3">
+  <button class="btn btn-secondary" onclick="loadVolunteerList()">Refresh List</button>
+  <div class="d-inline-flex ms-2">
+    <select id="vol-phone-country" class="form-select form-select-sm me-1" style="max-width:120px">
+      <option value="US">US</option>
+      <option value="CA">CA</option>
+      <option value="GB">GB</option>
+      <option value="AU">AU</option>
+      <option value="OTHER">Other</option>
+    </select>
+    <input id="vol-phone" class="form-control form-control-sm me-1" style="width:180px" placeholder="phone">
+    <button class="btn btn-outline-primary btn-sm" onclick="searchByPhone('volunteer')">Search</button>
+  </div>
+  <button class="btn btn-outline-primary ms-2" onclick="promptLookup()">Lookup (coordinator)</button>
+  <div class="mt-3" id="volList"></div>
+</div>
+
+<script>
+function renderList(items){
+  const container = document.getElementById('volList');
+  container.innerHTML = '';
+  items.forEach(p=>{
+    const el = document.createElement('div');
+    el.className='card mb-2';
+    el.innerHTML = `<div class="card-body"><b>${p.anon_id}</b><div>Items: ${JSON.stringify(p.items)}</div><div>Status: ${p.status}</div><div class="mt-2"><button class="btn btn-sm btn-success" onclick="updateStatus('${p.anon_id}','volunteer_on_it')">Volunteer on it</button> <button class="btn btn-sm btn-primary" onclick="updateStatus('${p.anon_id}','delivered')">Delivered</button></div></div>`;
+    container.appendChild(el);
+  });
+}
+window.loadVolunteerList = async function(){
+  const r = await apiGet('/volunteer/list');
+  if(r.ok){ renderList(await r.json()); } else { showResultModal('Error','<p>Authentication required</p>'); }
+}
+window.updateStatus = async function(anon,status){
+  const r = await apiPost('/status/update', {anon_id:anon, status:status, date: new Date().toISOString()});
+  if(r.ok) loadVolunteerList(); else showResultModal('Error','<p>Failed to update status</p>');
+}
+window.promptLookup = function(){
+  const anon = prompt('anon_id:');
+  if(!anon) return;
+  apiPost('/volunteer/lookup',{anon_id:anon}).then(async r=>{
+    if(!r.ok){ showResultModal('Error','<p>Not allowed or not found</p>'); return; }
+    const j = await r.json();
+    showResultModal('PII: '+anon, `<pre>${JSON.stringify(j.pii,null,2)}</pre>`);
+  });
+}
+</script>
+{% endblock %}
