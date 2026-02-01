@@ -52,3 +52,6 @@ Security notes
 - This prototype uses HTTP Basic Auth and is intended for small teams; run behind HTTPS in production.
 
 More detailed deployment instructions: see `DEPLOY.md`.
+
+Hosting (single authoritative instance)
+- If one person (Admin A) will host the app and DB for the team, see `ADMIN_HOSTING.md` for a concise plan, TLS/reverse-proxy notes, backups, and runbook commands.
