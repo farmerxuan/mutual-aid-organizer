@@ -15,18 +15,18 @@ This section is for non-technical users who just need to use the system.
 
 ### Main Pages
 
-**Intake (/ui/intake)** — Add a new participant
+**Intake (/ui/intake)** - Add a new participant
 - Fill in the participant's phone number (required).
 - Optionally add name, address, and special items/notes.
 - Click **Submit**. You will see a unique anonymous ID (keep this for reference).
 - Phone number is checked automatically to prevent duplicates.
 
-**Volunteer List (/ui/volunteer)** — View tasks
+**Volunteer List (/ui/volunteer)** - View tasks
 - See all participants and their items (food, non-food, custom).
 - Click **Show PII** to view full details if you need to contact them (requires coordinator role).
 - Use the phone search to look up a specific person by phone number.
 
-**Admin Page (/ui/admin)** — Summary for coordinators/admins
+**Admin Page (/ui/admin)** - Summary for coordinators/admins
 - View all participants in card format.
 - Search by phone to find a record quickly.
 - Click **Show PII** to see full contact details.
@@ -42,7 +42,7 @@ This section is for non-technical users who just need to use the system.
 ### Tips
 - Participant IDs look like random codes. Use these to refer to people in your team.
 - All actions are logged for security.
-- Never share identifying CSVs carelessly — they contain contact info.
+- Never share identifying CSVs carelessly - they contain contact info.
 
 ---
 

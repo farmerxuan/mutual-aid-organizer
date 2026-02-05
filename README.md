@@ -2,7 +2,7 @@
 
 Minimal Flask + SQLite prototype for anonymized participant intake and role-based access.
 
-**�- For non-technical users (volunteers, coordinators, admins):** See [User Guides for the Non-Technical](USER_GUIDES.md) for setup and usage instructions without code.
+**For non-technical users (volunteers, coordinators, admins):** See [User Guides for the Non-Technical](USER_GUIDES.md) for setup and usage instructions without code.
 
 Getting started (non-technical quick steps)
 
@@ -15,10 +15,10 @@ Getting started (non-technical quick steps)
 
 	The script will interactively create a `.env` with `ADMIN_USER` and `ADMIN_PASS` and optionally generate a `SECRET_KEY`, then build and start the app. After it finishes the site will be available at http://localhost:5000
 
-2) Without Docker — local Python (for more technical users)
+2) Without Docker - local Python (for more technical users)
 - Create a 32-byte AES key and set `SECRET_KEY` in your environment. Example (PowerShell):
 
-  Securely generate a 32‑byte key and export it to the current PowerShell session:
+  Securely generate a 32-byte key and export it to the current PowerShell session:
 
   ```powershell
   # generate 32 random bytes (secure RNG), base64-encode, and set SECRET_KEY for this session
