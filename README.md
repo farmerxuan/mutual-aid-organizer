@@ -133,15 +133,15 @@ More detailed deployment instructions: see `DEPLOY.md`.
 
 - All invite and reset actions are recorded in the admin audit log (`/ui/export-logs`).
 
-## Admin UI — User Management
+## Admin UI & User Management
 
 The admin interface at `/ui/users` provides a dashboard for managing volunteers and coordinators. You can:
 
-- **Send invitation links** — create a new account and optionally email a login link (requires email configured).
-- **Create users directly** — supply username, password, and role inline.
-- **Bulk import from CSV** — upload a CSV with columns `username`, optional `password`, optional `role`. Generated passwords appear in the result dialog.
-- **Manage existing users** — search, change roles, or delete users. All actions are audit-logged.
-- **Help modal** — click the **?** button next to the search controls for guidance on each method.
+- **Send invitation links** â€” create a new account and optionally email a login link (requires email configured).
+- **Create users directly** â€” supply username, password, and role inline.
+- **Bulk import from CSV** â€” upload a CSV with columns `username`, optional `password`, optional `role`. Generated passwords appear in the result dialog.
+- **Manage existing users** â€” search, change roles, or delete users. All actions are audit-logged.
+- **Help modal** â€” click the **?** button next to the search controls for guidance on each method.
 
 **Login and authentication:**
 
@@ -158,6 +158,3 @@ curl -u admin:admin123 http://localhost:5000/admin/users
 2. Click **Log In** (top-right button) and enter admin credentials.
 3. Use the forms to send invites, create users, or import from CSV.
 4. View the audit log at `/ui/export-logs` to see all admin actions.
-
-
-
