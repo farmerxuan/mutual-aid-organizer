@@ -1,0 +1,192 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>User Management</h2>
+  <div class="float-end">
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#adminHelpModal">Help</button>
+  </div>
+  <div class="card p-3 mb-3">
+    <h5>Send invitation (with link)</h5>
+    <div class="row g-2">
+      <div class="col-md-3"><input id="inviteUserName" class="form-control" placeholder="username"></div>
+      <div class="col-md-3"><input id="inviteUserEmail" type="email" class="form-control" placeholder="user@example.com (optional)"></div>
+      <div class="col-md-3">
+        <select id="inviteUserRole" class="form-select">
+          <option value="volunteer">volunteer</option>
+          <option value="coordinator">coordinator</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <div class="col-md-3"><button id="sendInviteBtn" class="btn btn-info">Send Invite</button></div>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h5>Create user</h5>
+    <div class="row g-2">
+      <div class="col-md-3"><input id="newUserName" class="form-control" placeholder="username"></div>
+      <div class="col-md-3"><input id="newUserPass" type="password" class="form-control" placeholder="password"></div>
+      <div class="col-md-3">
+        <select id="newUserRole" class="form-select">
+          <option value="volunteer">volunteer</option>
+          <option value="coordinator">coordinator</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <div class="col-md-3"><button id="createUserBtn" class="btn btn-primary">Create</button></div>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h5>Bulk import users (CSV)</h5>
+    <div class="row g-2 align-items-center">
+      <div class="col-md-6">
+        <input id="importFile" type="file" accept=".csv" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <button id="importBtn" class="btn btn-outline-primary">Import CSV</button>
+      </div>
+      <div class="col-md-3 text-muted">CSV columns: <code>username</code>, optional <code>password</code>, optional <code>role</code></div>
+    </div>
+  </div>
+
+  <div>
+    <h5>Existing Users</h5>
+    <div class="d-flex mb-2 align-items-center">
+      <input id="userSearch" class="form-control form-control-sm me-2" placeholder="Search username">
+      <select id="perPage" class="form-select form-select-sm me-2" style="width:80px"><option>10</option><option selected>25</option><option>50</option></select>
+      <button class="btn btn-sm btn-outline-secondary me-2" title="Help" data-bs-toggle="modal" data-bs-target="#adminHelpModal">?</button>
+      <button id="searchBtn" class="btn btn-sm btn-secondary">Search</button>
+    </div>
+    <table class="table table-sm" id="usersTable">
+      <thead><tr><th>Username</th><th>Role</th><th>Actions</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <nav><ul class="pagination" id="usersPager"></ul></nav>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', ()=>{
+  const perPageEl = document.getElementById('perPage');
+  const searchEl = document.getElementById('userSearch');
+  let currentPage = 1;
+  function renderPager(total, page, perPage){
+    const pages = Math.max(1, Math.ceil(total / perPage));
+    const ul = document.getElementById('usersPager'); ul.innerHTML='';
+    for(let i=1;i<=pages;i++){
+      const li=document.createElement('li'); li.className = 'page-item'+(i===page? ' active':'');
+      const a=document.createElement('a'); a.className='page-link'; a.href='#'; a.textContent = i; a.addEventListener('click', (e)=>{e.preventDefault(); load(i)});
+      li.appendChild(a); ul.appendChild(li);
+    }
+  }
+
+  async function load(page){
+    currentPage = page || 1;
+    const per = parseInt(perPageEl.value||25);
+    const q = (searchEl.value||'').trim();
+    const params = new URLSearchParams({page: currentPage, per_page: per});
+    if(q) params.set('q', q);
+    const res = await apiGet('/admin/users?' + params.toString());
+    if(!res.ok){ 
+      const errText = await res.text();
+      showResultModal('Error','<p>Failed to fetch users</p><pre>'+escapeHtml(errText)+'</pre>'); 
+      return; 
+    }
+    const obj = await res.json();
+    const users = obj.items || [];
+    const tbody = document.querySelector('#usersTable tbody'); tbody.innerHTML='';
+    users.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.role)}</td><td></td>`;
+      const td = tr.querySelector('td:last-child');
+      const sel = document.createElement('select'); sel.className='form-select form-select-sm d-inline-block me-2'; sel.style.width='160px';
+      ['volunteer','coordinator','admin'].forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; if(r===u.role) o.selected=true; sel.appendChild(o); });
+      sel.addEventListener('change', async ()=>{
+        const resp = await fetch(`/admin/users/${u.username}`, {method:'PUT', headers: {'Authorization': getAuth(), 'Content-Type':'application/json'}, credentials: 'same-origin', body: JSON.stringify({role: sel.value})});
+        if(resp.ok) showToast('Role updated','success'); else showToast('Update failed','danger');
+      });
+      td.appendChild(sel);
+      const del = document.createElement('button'); del.className='btn btn-sm btn-outline-danger ms-2'; del.textContent='Delete';
+      del.addEventListener('click', async ()=>{
+        if(!confirm('Delete user '+u.username+'?')) return;
+        const resp = await fetch(`/admin/users/${u.username}`, {method:'DELETE', headers: {'Authorization': getAuth()}, credentials: 'same-origin'});
+        if(resp.ok){ showToast('Deleted','success'); load(currentPage); } else { showToast('Delete failed','danger'); }
+      });
+      td.appendChild(del);
+      tbody.appendChild(tr);
+    });
+    renderPager(obj.total||0, obj.page||1, obj.per_page||per);
+  }
+
+  document.getElementById('sendInviteBtn').addEventListener('click', async ()=>{
+    const u = document.getElementById('inviteUserName').value.trim();
+    const e = document.getElementById('inviteUserEmail').value.trim();
+    const role = document.getElementById('inviteUserRole').value;
+    if(!u){ showToast('username required','warning'); return; }
+    const res = await fetch('/admin/invite', {method:'POST', headers: {'Authorization': getAuth(), 'Content-Type':'application/json'}, credentials: 'same-origin', body: JSON.stringify({username:u, email:e||undefined, role:role})});
+    if(res.status===201){ 
+      const j = await res.json();
+      let msg = `Invite sent to ${u}\\n\\nLink: ${j.invite_link}`;
+      if(j.token) msg += `\\n\\nDev token: ${j.token}`;
+      showResultModal('Invite Created', `<pre>${escapeHtml(msg)}</pre>`);
+      document.getElementById('inviteUserName').value=''; 
+      document.getElementById('inviteUserEmail').value=''; 
+    } else { const t=await res.text(); showToast('Error: '+t,'danger'); }
+  });
+
+  document.getElementById('createUserBtn').addEventListener('click', async ()=>{
+    const u = document.getElementById('newUserName').value.trim();
+    const p = document.getElementById('newUserPass').value;
+    const role = document.getElementById('newUserRole').value;
+    if(!u||!p){ showToast('username & password required','warning'); return; }
+    const res = await fetch('/admin/users', {method:'POST', headers: {'Authorization': getAuth(), 'Content-Type':'application/json'}, credentials: 'same-origin', body: JSON.stringify({username:u,password:p,role:role})});
+    if(res.status===201){ showToast('User created','success'); document.getElementById('newUserName').value=''; document.getElementById('newUserPass').value=''; load(); } else { const t=await res.text(); showToast('Error: '+t,'danger'); }
+  });
+
+  document.getElementById('searchBtn').addEventListener('click', ()=> load(1));
+  perPageEl.addEventListener('change', ()=> load(1));
+
+  // bulk import
+  document.getElementById('importBtn').addEventListener('click', async ()=>{
+    const f = document.getElementById('importFile'); if(!f.files || !f.files[0]){ showToast('Select CSV file','warning'); return; }
+    const form = new FormData(); form.append('file', f.files[0]);
+    const resp = await fetch('/admin/users/import', {method:'POST', headers: {'Authorization': getAuth()}, credentials: 'same-origin', body: form});
+    if(!resp.ok){ const t=await resp.text(); showToast('Import failed: '+t,'danger'); return; }
+    const j = await resp.json();
+    let msg = '';
+    j.results.forEach(r=>{ msg += `${r.username}: ${r.status}` + (r.password? ` (pw: ${r.password})` : '') + '\n'; });
+    showResultModal('Import Results', `<pre>${escapeHtml(msg)}</pre>`);
+    load(currentPage);
+  });
+
+  load(1);
+});
+</script>
+
+  <!-- Admin help modal -->
+  <div class="modal fade" id="adminHelpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Managing Users (Help)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>There are multiple ways to create volunteers:</p>
+          <ul>
+            <li><strong>Create user</strong>: Admin supplies username/password and role directly in the UI.</li>
+            <li><strong>Invite link</strong>: Send an invite (optional email). The volunteer claims the link and sets their password.</li>
+            <li><strong>Bulk import</strong>: Upload a CSV with <code>username</code>, optional <code>password</code>, and <code>role</code>. Generated passwords are shown in the import result and should be shared securely.</li>
+            <li><strong>CLI</strong>: Operators can run <code>flask create-user</code> or automation using <code>create-admin-from-env</code>.</li>
+          </ul>
+          <p>Prefer invites to avoid sending plaintext passwords. Configure email via <code>MAIL_*</code> env vars to send links automatically (see README/DEPLOY).</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

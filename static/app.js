@@ -2,23 +2,82 @@ function getAuth(){
   const a = sessionStorage.getItem('auth');
   return a || '';
 }
+function getAuthUsername(){
+  const a = sessionStorage.getItem('auth_user');
+  return a || '';
+}
 function loginPrompt(){
-  const u = prompt('username:');
-  if(!u) return;
-  const p = prompt('password:');
-  if(!p) return;
-  const header = 'Basic ' + btoa(u+':'+p);
-  sessionStorage.setItem('auth', header);
-  alert('Credentials set for session');
+  const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+  modal.show();
+}
+function setCredentials(username, password){
+  // Prefer server-side session login
+  fetch('/api/login', {method:'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: username, password: password})})
+    .then(async res => {
+      if(!res.ok){ const t = await res.text(); showToast('Login failed: '+t,'danger'); return; }
+      const j = await res.json();
+      sessionStorage.setItem('auth_user', j.username || username);
+      // keep basic auth as fallback
+      const header = 'Basic ' + btoa(username+':'+password);
+      sessionStorage.setItem('auth', header);
+      updateNavbar();
+      showToast('Logged in as ' + j.username,'success');
+    }).catch(e=>{ showToast('Login error','danger'); });
+}
+function logout(){
+  fetch('/api/logout', {method:'POST', credentials: 'same-origin'}).finally(()=>{
+    sessionStorage.removeItem('auth');
+    sessionStorage.removeItem('auth_user');
+    updateNavbar();
+    showToast('Logged out', 'info');
+  });
+}
+function updateNavbar(){
+  const user = getAuthUsername();
+  const btn = document.getElementById('credentialsBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(user){
+    btn.textContent = 'Logged in: ' + user;
+    btn.classList.remove('btn-outline-light');
+    btn.classList.add('btn-success');
+    if(logoutBtn) logoutBtn.style.display = 'inline-block';
+  } else {
+    btn.textContent = 'Log In';
+    btn.classList.add('btn-outline-light');
+    btn.classList.remove('btn-success');
+    if(logoutBtn) logoutBtn.style.display = 'none';
+  }
 }
 async function apiGet(path){
   const auth = getAuth();
-  return fetch(path, {headers: {'Authorization': auth}});
+  const headers = {};
+  if(auth) headers['Authorization'] = auth;
+  return fetch(path, {headers: headers, credentials: 'same-origin'});
 }
 async function apiPost(path, body){
   const auth = getAuth();
-  return fetch(path, {method:'POST', headers: {'Authorization': auth, 'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const headers = {'Content-Type':'application/json'};
+  if(auth) headers['Authorization'] = auth;
+  return fetch(path, {method:'POST', headers: headers, credentials: 'same-origin', body: JSON.stringify(body)});
 }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  updateNavbar();
+  const loginForm = document.getElementById('loginForm');
+  if(loginForm){
+    loginForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value;
+      const p = document.getElementById('loginPassword').value;
+      if(u && p){
+        setCredentials(u, p);
+        loginForm.reset();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if(modal) modal.hide();
+      }
+    });
+  }
+});
 
 // wire intake form
 document.addEventListener('DOMContentLoaded', ()=>{

@@ -16,6 +16,14 @@ ADMIN_USER=admin
 ADMIN_PASS=your-strong-password
 # SECRET_KEY is optional; if omitted the container will generate one and print it on first run.
 # SECRET_KEY=<base64-or-hex-encoded-32-byte-key>
+
+# Optional: Email configuration for invites and password resets
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=noreply@yourorg.com
 ```
 
 2. Build and run with Docker Compose:
@@ -38,3 +46,13 @@ Advanced: Recreating the container
 
 Security
 - This setup is intended for small, trusted teams. For public hosting, run behind a reverse proxy (Nginx) and HTTPS. Store `SECRET_KEY` and admin credentials securely (don't commit `.env` to source control).
+
+Email configuration
+- If you set `MAIL_SERVER`, the app will send invites and password-reset links via email automatically.
+- Common providers:
+  - **Gmail:** Create an app password after enabling 2FA, then use that password in `MAIL_PASSWORD`.
+  - **SendGrid / Mailgun / AWS SES:** Use their SMTP endpoints and API credentials.
+  - **Self-hosted:** Use your organizational Postfix or Exim SMTP settings.
+- If `MAIL_SERVER` is not set, invites and resets work via web link but are not emailed.
+
+

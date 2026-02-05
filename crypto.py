@@ -7,18 +7,28 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 def get_key() -> bytes:
-    # Expect SECRET_KEY as hex or base64 in env
+    # Prefer explicit SECRET_KEY (hex or base64). Fall back to FLASK_SECRET (passphrase).
     k = os.environ.get('SECRET_KEY')
+    source = 'SECRET_KEY'
     if not k:
-        raise RuntimeError('SECRET_KEY not set')
-    # try hex
-    try:
-        return bytes.fromhex(k)
-    except Exception:
+        k = os.environ.get('FLASK_SECRET') or os.environ.get('APP_SECRET')
+        source = 'FLASK_SECRET'
+    if not k:
+        raise RuntimeError('SECRET_KEY not set. Set SECRET_KEY (hex or base64) or FLASK_SECRET (passphrase)')
+
+    # If SECRET_KEY provided, expect hex or base64 encoding of raw key bytes
+    if source == 'SECRET_KEY':
+        # try hex
         try:
-            return b64decode(k)
+            return bytes.fromhex(k)
         except Exception:
-            raise RuntimeError('SECRET_KEY must be hex or base64')
+            try:
+                return b64decode(k)
+            except Exception:
+                raise RuntimeError('SECRET_KEY must be hex or base64')
+
+    # FLASK_SECRET provided: derive a 32-byte key deterministically from passphrase
+    return hashlib.sha256(k.encode('utf-8')).digest()
 
 
 def encrypt_pii(pii: dict) -> bytes:

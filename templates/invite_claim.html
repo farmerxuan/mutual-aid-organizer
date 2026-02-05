@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block body %}
+<div class="container mt-4">
+  <h2>Claim Invite for {{ username }}</h2>
+  <form id="claimForm">
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" id="password" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Set Password</button>
+  </form>
+</div>
+<script>
+document.getElementById('claimForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const pw = document.getElementById('password').value;
+  const res = await fetch(`/invite/{{ token }}`, {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password: pw})});
+  if(res.ok){ alert('Account created. You may now login.'); window.location='/'; } else { alert('Error'); }
+});
+</script>
+{% endblock %}

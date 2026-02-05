@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
 {% block body %}
 <div class="container mt-4">
-  <h2>Export Logs</h2>
+  <h2>Admin Logs</h2>
   <form id="logsFilterForm" class="row g-3 align-items-end">
     <div class="col-auto">
-      <label class="form-label">User</label>
-      <input type="text" id="filterUser" class="form-control" placeholder="username">
+      <label class="form-label">User / Target</label>
+      <input type="text" id="filterUser" class="form-control" placeholder="username or target">
     </div>
     <div class="col-auto">
       <label class="form-label">Start (ISO)</label>
@@ -24,9 +24,9 @@
   </form>
 
   <div class="mt-3">
-    <table class="table table-sm" id="logsTable">
+      <table class="table table-sm" id="logsTable">
       <thead>
-        <tr><th>ID</th><th>User</th><th>Action</th><th>Rows</th><th>When</th></tr>
+        <tr><th>ID</th><th>User</th><th>Action</th><th>Rows</th><th>Target</th><th>Details</th><th>When</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -59,7 +59,9 @@ document.addEventListener('DOMContentLoaded', function(){
     tbody.innerHTML = '';
     res.items.forEach(it => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${it.id}</td><td>${escapeHtml(it.username)}</td><td>${escapeHtml(it.action)}</td><td>${it.rows}</td><td>${escapeHtml(it.created_at)}</td>`;
+      const target = it.target || '';
+      const details = it.details || '';
+      tr.innerHTML = `<td>${it.id}</td><td>${escapeHtml(it.username)}</td><td>${escapeHtml(it.action)}</td><td>${it.rows||''}</td><td>${escapeHtml(target)}</td><td>${escapeHtml(details)}</td><td>${escapeHtml(it.created_at)}</td>`;
       tbody.appendChild(tr);
     });
     renderPager(res.total, res.page, res.per_page);
