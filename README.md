@@ -13,10 +13,10 @@ Getting started (non-technical quick steps)
 
 	The script will interactively create a `.env` with `ADMIN_USER` and `ADMIN_PASS` and optionally generate a `SECRET_KEY`, then build and start the app. After it finishes the site will be available at http://localhost:5000
 
-2) Without Docker — local Python (for more technical users)
+2) Without Docker â€” local Python (for more technical users)
 - Create a 32-byte AES key and set `SECRET_KEY` in your environment. Example (PowerShell):
 
-  Securely generate a 32‑byte key and export it to the current PowerShell session:
+  Securely generate a 32â€‘byte key and export it to the current PowerShell session:
 
   ```powershell
   # generate 32 random bytes (secure RNG), base64-encode, and set SECRET_KEY for this session
@@ -131,15 +131,15 @@ More detailed deployment instructions: see `DEPLOY.md`.
 
 - All invite and reset actions are recorded in the admin audit log (`/ui/export-logs`).
 
-## Admin UI — User Management
+## Admin UI & User Management
 
 The admin interface at `/ui/users` provides a dashboard for managing volunteers and coordinators. You can:
 
-- **Send invitation links** — create a new account and optionally email a login link (requires email configured).
-- **Create users directly** — supply username, password, and role inline.
-- **Bulk import from CSV** — upload a CSV with columns `username`, optional `password`, optional `role`. Generated passwords appear in the result dialog.
-- **Manage existing users** — search, change roles, or delete users. All actions are audit-logged.
-- **Help modal** — click the **?** button next to the search controls for guidance on each method.
+- **Send invitation links** â€” create a new account and optionally email a login link (requires email configured).
+- **Create users directly** â€” supply username, password, and role inline.
+- **Bulk import from CSV** â€” upload a CSV with columns `username`, optional `password`, optional `role`. Generated passwords appear in the result dialog.
+- **Manage existing users** â€” search, change roles, or delete users. All actions are audit-logged.
+- **Help modal** â€” click the **?** button next to the search controls for guidance on each method.
 
 **Login and authentication:**
 
@@ -157,10 +157,6 @@ curl -u admin:admin123 http://localhost:5000/admin/users
 3. Use the forms to send invites, create users, or import from CSV.
 4. View the audit log at `/ui/export-logs` to see all admin actions.
 
-````
-
----
-
 ## User Guide (for Volunteers & Coordinators)
 
 This section is for non-technical users who just need to use the system.
@@ -172,18 +168,18 @@ This section is for non-technical users who just need to use the system.
 
 ### Main Pages
 
-**Intake (/ui/intake)** � Add a new participant
+**Intake (/ui/intake)** — Add a new participant
 - Fill in the participant's phone number (required).
 - Optionally add name, address, and special items/notes.
 - Click **Submit**. You will see a unique anonymous ID (keep this for reference).
 - Phone number is checked automatically to prevent duplicates.
 
-**Volunteer List (/ui/volunteer)** � View tasks
+**Volunteer List (/ui/volunteer)** — View tasks
 - See all participants and their items (food, non-food, custom).
 - Click **Show PII** to view full details if you need to contact them (requires coordinator role).
 - Use the phone search to look up a specific person by phone number.
 
-**Admin Page (/ui/admin)** � Summary for coordinators/admins
+**Admin Page (/ui/admin)** — Summary for coordinators/admins
 - View all participants in card format.
 - Search by phone to find a record quickly.
 - Click **Show PII** to see full contact details.
@@ -199,7 +195,7 @@ This section is for non-technical users who just need to use the system.
 ### Tips
 - Participant IDs look like random codes. Use these to refer to people in your team.
 - All actions are logged for security.
-- Never share identifying CSVs carelessly � they contain contact info.
+- Never share identifying CSVs carelessly — they contain contact info.
 
 ---
 
