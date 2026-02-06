@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="container mt-4">
+<div class="page-container">
   <h2>User Management</h2>
   <div class="float-end">
     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#adminHelpModal">Help</button>
   </div>
-  <div class="card p-3 mb-3">
+  <div class="page-card">
     <h5>Send invitation (with link)</h5>
     <div class="row g-2">
       <div class="col-md-3"><input id="inviteUserName" class="form-control" placeholder="username"></div>
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div class="card p-3 mb-3">
+  <div class="page-card">
     <h5>Create user</h5>
     <div class="row g-2">
       <div class="col-md-3"><input id="newUserName" class="form-control" placeholder="username"></div>
@@ -37,7 +37,7 @@
     </div>
   </div>
 
-  <div class="card p-3 mb-3">
+  <div class="page-card">
     <h5>Bulk import users (CSV)</h5>
     <div class="row g-2 align-items-center">
       <div class="col-md-6">
@@ -63,6 +63,7 @@
       <tbody></tbody>
     </table>
     <nav><ul class="pagination" id="usersPager"></ul></nav>
+  </div>
   </div>
 </div>
 

@@ -84,6 +84,23 @@ Security notes
 
 More detailed deployment instructions: see `DEPLOY.md`.
 
+## Roles & Permissions
+
+The app supports three roles with the following capabilities:
+
+| Role | View PII | Export Identifying CSV | View Export Logs | Manage Users | Typical UI |
+|---|:---:|:---:|:---:|:---:|---|
+| Admin | Yes | Yes (requires confirmation) | Yes | Yes | `/ui/admin`, `/ui/users`, `/ui/export-logs` |
+| Coordinator | Yes | No (can export anonymized CSV) | Yes | No | `/ui/admin`, `/ui/export-logs` |
+| Volunteer | No | No | No | No | `/ui/volunteer` |
+
+Notes:
+- "View PII" means the role can see identifying participant details (phone, name, address) from the Admin UI or via coordinator APIs.
+- Identifying CSV exports are restricted and require confirmation; anonymized exports are available for authorized roles.
+- User management (creating/changing roles/deleting accounts) is admin-only.
+- Server-side route guards enforce these permissions (see `require_auth(role=...)` in `app.py`).
+
+
 ## Invites and password resets
 
 **Admins create invites** (recommended over sending plaintext passwords):

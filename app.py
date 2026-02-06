@@ -112,27 +112,27 @@ class PasswordReset(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-def require_auth(role=None):
-    # Accept either session-based login or HTTP Basic auth
-    # 1) Session
+def get_current_user():
+    """Get current user from session or Basic Auth, return None if not authenticated."""
     if 'username' in session:
         uname = session.get('username')
         user = User.query.filter_by(username=uname).first()
-        if not user:
-            abort(403)
-        if role and user.role != role and user.role != 'admin':
-            abort(403)
         return user
-    # 2) HTTP Basic
     auth = request.authorization
     if auth:
         user = User.query.filter_by(username=auth.username).first()
-        if not user or not user.check_password(auth.password):
-            abort(403)
-        if role and user.role != role and user.role != 'admin':
-            abort(403)
-        return user
-    abort(401)
+        if user and user.check_password(auth.password):
+            return user
+    return None
+
+def require_auth(role=None):
+    # Accept either session-based login or HTTP Basic auth
+    user = get_current_user()
+    if not user:
+        abort(401)
+    if role and user.role != role and user.role != 'admin':
+        abort(403)
+    return user
 
 
 @app.cli.command('init-db')
@@ -369,8 +369,19 @@ def admin_export_logs_csv():
 
 @app.route('/ui/export-logs')
 def ui_export_logs():
-    # Render admin logs UI; API endpoints enforce authentication.
-    return render_template('admin_logs.html')
+    user = require_auth(role='coordinator')
+    return render_template('admin_logs.html', user=user, user_role=user.role)
+
+
+@app.route('/client-metrics', methods=['POST'])
+def client_metrics():
+    # Accept client-side performance timings for local debugging only
+    try:
+        data = request.get_data(as_text=True)
+        app.logger.info('Client metrics POST from %s: %s', request.remote_addr, data)
+    except Exception as e:
+        app.logger.exception('Failed to log client metrics: %s', e)
+    return ('', 204)
 
 
 @app.route('/status/update', methods=['POST'])
@@ -442,28 +453,32 @@ def export_identifying():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    user = get_current_user()
+    return render_template('landing.html', user=user, user_role=user.role if user else None)
 
 
 @app.route('/ui/intake')
 def ui_intake():
-    return render_template('intake.html')
+    user = get_current_user()
+    return render_template('intake.html', user=user, user_role=user.role if user else None)
 
 
 @app.route('/ui/volunteer')
 def ui_volunteer():
-    return render_template('volunteer.html')
+    user = get_current_user()
+    return render_template('volunteer.html', user=user, user_role=user.role if user else None)
 
 
 @app.route('/ui/admin')
 def ui_admin():
-    return render_template('admin.html')
+    user = require_auth(role='coordinator')
+    return render_template('admin.html', user=user, user_role=user.role)
 
 
 @app.route('/ui/users')
 def ui_users():
-    # Render user management UI; API endpoints enforce authentication.
-    return render_template('admin_users.html')
+    user = require_auth(role='admin')
+    return render_template('admin_users.html', user=user, user_role=user.role)
 
 
 @app.route('/admin/invite', methods=['POST'])

@@ -5,24 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mutual Aid Organizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 200px;
+        height: calc(100vh - 60px);
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        padding: 20px 0;
+        overflow-y: auto;
+        display: none;
+        z-index: 100;
+      }
+      .sidebar.show {
+        display: block;
+      }
+      .sidebar .nav-link {
+        color: #333;
+        padding: 10px 20px;
+        display: block;
+        border-left: 3px solid transparent;
+      }
+      .sidebar .nav-link:hover {
+        background: #e9ecef;
+        border-left-color: #007bff;
+      }
+      .sidebar .nav-link.active {
+        background: #e7f1ff;
+        border-left-color: #007bff;
+        font-weight: 500;
+      }
+      .sidebar .nav-link.disabled {
+        color: #999;
+        cursor: not-allowed;
+      }
+      .main-content {
+        margin-left: 0;
+        flex: 1;
+      }
+      .main-content.with-sidebar {
+        margin-left: 200px;
+      }
+      /* Shared page utilities */
+      .page-container {
+        max-width: 1100px;
+        margin: 1.5rem auto;
+        padding: 0 1rem;
+      }
+      .page-card {
+        background: #fff;
+        border-radius: .25rem;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.05);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+    </style>
   </head>
   <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="/">Resource Org</a>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 ms-auto">
           <button id="credentialsBtn" class="btn btn-outline-light btn-sm" onclick="loginPrompt()">Log In</button>
           <button id="logoutBtn" class="btn btn-outline-danger btn-sm" onclick="logout()" style="display:none">Logout</button>
-          <a class="btn btn-outline-light btn-sm" href="/ui/intake">Intake</a>
         </div>
       </div>
     </nav>
-    <div class="container">
+
+    <!-- Sidebar -->
+    {% if user %}
+    <div class="sidebar show" id="sidebar">
+      <a href="/ui/intake" class="nav-link">Intake</a>
+      <a href="/ui/volunteer" class="nav-link">Volunteer</a>
+      {% if user_role == 'admin' or user_role == 'coordinator' %}
+      <a href="/ui/admin" class="nav-link" id="adminLink">Admin</a>
+      {% else %}
+      <a href="/ui/admin" class="nav-link disabled" id="adminLink" style="pointer-events: none;">Admin</a>
+      {% endif %}
+      {% if user_role == 'admin' %}
+      <a href="/ui/users" class="nav-link" id="usersLink">Manage Users</a>
+      <a href="/ui/export-logs" class="nav-link" id="logsLink">Export Logs</a>
+      {% elif user_role == 'coordinator' %}
+      <a href="/ui/export-logs" class="nav-link" id="logsLink">Export Logs</a>
+      {% else %}
+      <a href="/ui/export-logs" class="nav-link disabled" id="logsLink" style="pointer-events: none;">Export Logs</a>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="sidebar" id="sidebar"></div>
+    {% endif %}
+
+    <div class="main-content {% if user %}with-sidebar{% endif %}" id="mainContent">
       {% block content %}{% endblock %}
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/libphonenumber-js@1.10.27/bundle/libphonenumber-js.min.js"></script>
-    <script src="/static/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    {% block extra_js %}{% endblock %}
+    <script src="/static/app.js" defer></script>
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
       <div id="toast-container"></div>
     </div>
@@ -84,6 +169,37 @@
               <button id="confirmExportBtn" type="button" class="btn btn-danger">Confirm and Download</button>
             </div>
           </div>
+    
+          <!-- Client-side performance collector (dev only: only sends when host is localhost) -->
+          <script>
+          (function(){
+            try{
+              if(!['localhost','127.0.0.1'].includes(location.hostname)) return;
+              window.addEventListener('load', function(){
+                try{
+                  var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation') && performance.getEntriesByType('navigation')[0]) || {};
+                  var paints = performance.getEntriesByType ? performance.getEntriesByType('paint') : [];
+                  var resources = performance.getEntriesByType ? performance.getEntriesByType('resource') : [];
+                  var relevant = resources.filter(function(r){ return /libphonenumber|app\.js|bootstrap/i.test(r.name); }).map(function(r){ return {name: r.name, start: r.startTime, duration: r.duration}; });
+                  var payload = {
+                    url: location.pathname,
+                    navigation: { domContentLoaded: nav.domContentLoadedEventEnd || 0, load: nav.loadEventEnd || 0, start: nav.startTime || 0 },
+                    paints: paints.map(function(p){ return { name: p.name, start: p.startTime }; }),
+                    resources: relevant,
+                    timestamp: Date.now()
+                  };
+                  var body = JSON.stringify(payload);
+                  if(navigator && navigator.sendBeacon){
+                    var blob = new Blob([body], {type: 'application/json'});
+                    navigator.sendBeacon('/client-metrics', blob);
+                  } else {
+                    fetch('/client-metrics', {method: 'POST', headers: {'Content-Type':'application/json'}, body: body});
+                  }
+                }catch(e){ console.log('metrics error', e); }
+              });
+            }catch(e){}
+          })();
+          </script>
         </div>
       </div>
   </body>

@@ -13,6 +13,21 @@ This section is for non-technical users who just need to use the system.
 - If you have an invite link, click it and set your password.
 - If you have username/password, click **Log In** at the top-right of any page.
 
+### Roles & What You Can Do
+
+The system has three roles. Here's what each can access:
+
+| Your Role | View Full Details? | See Audit Logs? | Manage Users? | Page Access |
+|---|:---:|:---:|:---:|---|
+| **Volunteer** | No (anonymized only) | No | No | Intake, Volunteer |
+| **Coordinator** | Yes | Yes | No | Intake, Volunteer, Admin, Export Logs |
+| **Admin** | Yes | Yes | Yes | All pages |
+
+**In plain terms:**
+- **Volunteer**: you see anonymized IDs and tasks; you cannot see phone numbers, names, or other identifying details.
+- **Coordinator**: you're a team lead; you can see full details, manage logs, but cannot create or delete user accounts.
+- **Admin**: you manage everything: users, roles, exports, and all auditing.
+
 ### Main Pages
 
 **Intake (/ui/intake)** - Add a new participant

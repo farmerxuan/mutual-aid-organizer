@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg">
+        <div class="card-body text-center p-5">
+          <h1 class="card-title mb-4">Mutual Aid Organizer</h1>
+          <p class="card-text text-muted mb-4">Welcome. Please log in to continue.</p>
+          <button class="btn btn-primary btn-lg w-100" onclick="loginPrompt()">Log In</button>
+          <hr class="my-4">
+          <p class="text-muted small">Don't have an account? Ask an admin for an invite link.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // On landing page load, show sidebar and check if already logged in
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = getAuthUsername();
+    if (user) {
+      // Redirect to intake if already logged in
+      window.location.href = '/ui/intake';
+    }
+  });
+</script>
+{% endblock %}

@@ -6,6 +6,10 @@ function getAuthUsername(){
   const a = sessionStorage.getItem('auth_user');
   return a || '';
 }
+function getAuthRole(){
+  const r = sessionStorage.getItem('auth_role');
+  return r || '';
+}
 function loginPrompt(){
   const modal = new bootstrap.Modal(document.getElementById('loginModal'));
   modal.show();
@@ -17,19 +21,34 @@ function setCredentials(username, password){
       if(!res.ok){ const t = await res.text(); showToast('Login failed: '+t,'danger'); return; }
       const j = await res.json();
       sessionStorage.setItem('auth_user', j.username || username);
+      sessionStorage.setItem('auth_role', j.role || 'volunteer');
       // keep basic auth as fallback
       const header = 'Basic ' + btoa(username+':'+password);
       sessionStorage.setItem('auth', header);
       updateNavbar();
+      showSidebar();
       showToast('Logged in as ' + j.username,'success');
+      // Redirect based on role: admin/coordinator -> admin UI, volunteers -> volunteer UI
+      const role = (j.role || 'volunteer');
+      if(role === 'admin' || role === 'coordinator'){
+        window.location.href = '/ui/admin';
+        return;
+      }
+      if(role === 'volunteer'){
+        window.location.href = '/ui/volunteer';
+        return;
+      }
     }).catch(e=>{ showToast('Login error','danger'); });
 }
 function logout(){
   fetch('/api/logout', {method:'POST', credentials: 'same-origin'}).finally(()=>{
     sessionStorage.removeItem('auth');
     sessionStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_role');
     updateNavbar();
+    hideSidebar();
     showToast('Logged out', 'info');
+    window.location.href = '/';
   });
 }
 function updateNavbar(){
@@ -48,6 +67,56 @@ function updateNavbar(){
     if(logoutBtn) logoutBtn.style.display = 'none';
   }
 }
+
+function showSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  const role = getAuthRole();
+  if(sidebar){
+    sidebar.classList.add('show');
+    mainContent.classList.add('with-sidebar');
+    // Disable admin link unless user is admin
+    const adminLink = document.getElementById('adminLink');
+    const usersLink = document.getElementById('usersLink');
+    const logsLink = document.getElementById('logsLink');
+    if(adminLink){
+      if(role === 'admin'){
+        adminLink.classList.remove('disabled');
+        adminLink.style.pointerEvents = 'auto';
+      } else {
+        adminLink.classList.add('disabled');
+        adminLink.style.pointerEvents = 'none';
+      }
+    }
+    if(usersLink){
+      if(role === 'admin'){
+        usersLink.classList.remove('disabled');
+        usersLink.style.pointerEvents = 'auto';
+      } else {
+        usersLink.classList.add('disabled');
+        usersLink.style.pointerEvents = 'none';
+      }
+    }
+    if(logsLink){
+      if(role === 'admin'){
+        logsLink.classList.remove('disabled');
+        logsLink.style.pointerEvents = 'auto';
+      } else {
+        logsLink.classList.add('disabled');
+        logsLink.style.pointerEvents = 'none';
+      }
+    }
+  }
+}
+
+function hideSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  if(sidebar){
+    sidebar.classList.remove('show');
+    mainContent.classList.remove('with-sidebar');
+  }
+}
 async function apiGet(path){
   const auth = getAuth();
   const headers = {};
@@ -63,6 +132,12 @@ async function apiPost(path, body){
 
 document.addEventListener('DOMContentLoaded', ()=>{
   updateNavbar();
+  const user = getAuthUsername();
+  if(user){
+    showSidebar();
+  } else {
+    hideSidebar();
+  }
   const loginForm = document.getElementById('loginForm');
   if(loginForm){
     loginForm.addEventListener('submit', (e)=>{

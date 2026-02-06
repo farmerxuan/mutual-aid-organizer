@@ -1,25 +1,30 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h2>Admin</h2>
-<div class="mb-3">
-  <button class="btn btn-secondary" onclick="loadAdminList()">Refresh</button>
-  <button class="btn btn-outline-info ms-2" onclick="download('/export/anonymized')">Download anonymized CSV</button>
-  <button id="export-identifying-btn" class="btn btn-outline-dark ms-2">Download identifying CSV</button>
-  <div class="d-inline-flex ms-3">
-    <select id="admin-phone-country" class="form-select form-select-sm me-1" style="max-width:120px">
-      <option value="US">US</option>
-      <option value="CA">CA</option>
-      <option value="GB">GB</option>
-      <option value="AU">AU</option>
-      <option value="OTHER">Other</option>
-    </select>
-    <input id="admin-phone" class="form-control form-control-sm me-1" style="width:180px" placeholder="phone">
-    <button class="btn btn-outline-primary btn-sm" onclick="searchByPhone('admin')">Search</button>
+<div class="page-container">
+  <h2>Admin</h2>
+  <div class="page-card">
+    <div class="mb-3">
+      <button class="btn btn-secondary" onclick="loadAdminList()">Refresh</button>
+      <button class="btn btn-outline-info ms-2" onclick="download('/export/anonymized')">Download anonymized CSV</button>
+      <button id="export-identifying-btn" class="btn btn-outline-dark ms-2">Download identifying CSV</button>
+      <div class="d-inline-flex ms-3">
+        <select id="admin-phone-country" class="form-select form-select-sm me-1" style="max-width:120px">
+          <option value="US">US</option>
+          <option value="CA">CA</option>
+          <option value="GB">GB</option>
+          <option value="AU">AU</option>
+          <option value="OTHER">Other</option>
+        </select>
+        <input id="admin-phone" class="form-control form-control-sm me-1" style="width:180px" placeholder="phone">
+        <button class="btn btn-outline-primary btn-sm" onclick="searchByPhone('admin')">Search</button>
+      </div>
+      <div class="mt-2">
+        <a href="/ui/export-logs" class="btn btn-outline-secondary me-2">View export logs</a>
+        <a href="/ui/users" class="btn btn-outline-secondary">Manage users</a>
+      </div>
+    </div>
+    <div class="mt-3" id="adminList"></div>
   </div>
-    <a href="/ui/export-logs" class="btn btn-outline-secondary me-2">View export logs</a>
-    <a href="/ui/users" class="btn btn-outline-secondary">Manage users</a>
-  <div class="mt-3" id="adminList"></div>
-</div>
 
 <script>
 window.loadAdminList = async function(){
@@ -49,4 +54,8 @@ window.download = async function(path){
   const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop()+'.csv'; a.click();
 }
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/libphonenumber-js@1.10.27/bundle/libphonenumber-js.min.js" defer></script>
 {% endblock %}
