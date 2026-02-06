@@ -68,6 +68,7 @@ class Participant(db.Model):
     encrypted_pii = db.Column(db.LargeBinary, nullable=False)
     phone_hash = db.Column(db.String(64), index=True, nullable=False)
     input_by = db.Column(db.String(80))
+    assigned_to = db.Column(db.String(80))  # username of assigned volunteer
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(30), default='scheduled')
     status_date = db.Column(db.DateTime)
@@ -232,7 +233,7 @@ def volunteer_list():
 
 @app.route('/volunteer/lookup', methods=['POST'])
 def volunteer_lookup():
-    user = require_auth(role='coordinator')
+    user = require_auth()
     data = request.json
     anon = data.get('anon_id')
     if not anon:
@@ -240,6 +241,12 @@ def volunteer_lookup():
     p = Participant.query.filter_by(anon_id=anon).first()
     if not p:
         return jsonify({'error': 'not found'}), 404
+    
+    # Allow access if: coordinator/admin, OR volunteer assigned to this delivery
+    can_access = (user.role in ('coordinator', 'admin')) or (user.role == 'volunteer' and p.assigned_to == user.username)
+    if not can_access:
+        return jsonify({'error': 'not authorized (you are not assigned to this delivery)'}), 403
+    
     pii = decrypt_pii(p.encrypted_pii)
     return jsonify({'anon_id': anon, 'pii': pii})
 
@@ -397,6 +404,9 @@ def status_update():
     if not p:
         return jsonify({'error': 'not found'}), 404
     p.status = new_status
+    # Assign to the volunteer if updating the status
+    if user.role == 'volunteer':
+        p.assigned_to = user.username
     if date:
         p.status_date = datetime.fromisoformat(date)
     db.session.commit()
